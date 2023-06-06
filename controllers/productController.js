@@ -43,8 +43,6 @@ exports.createProduct = catchAsyncErrors(async (req, res, next) => {
     }, {});
 
     let productInfo = Object.assign({}, obj, { images: images });
-    categoriesJSON = JSON.parse(productInfo.category);
-    categoriesSet = new Set(categoriesJSON.ids);
     productInfo.category = Array.from(
       new Set(JSON.parse(productInfo.category).ids)
     );
@@ -67,11 +65,13 @@ exports.getAllProducts = catchAsyncErrors(async (req, res) => {
   const productCount = await Product.countDocuments();
 
   const apiFeature = new ApiFeatures(
-    Product.find().populate({
-      path: 'category',
-      model: 'Category',
-      options: { strictPopulate: false },
-    }),
+    // Product.find().populate({
+    //   path: 'category',
+    //   model: 'Category',
+    //   options: { strictPopulate: false },
+    // }),
+    // req.query
+    Product.find(),
     req.query
   )
     .search()
@@ -80,8 +80,6 @@ exports.getAllProducts = catchAsyncErrors(async (req, res) => {
 
   const products = await apiFeature.query;
   console.log('products sent');
-  console.log(req.query);
-  console.log(req.params);
   // const startIndex = (req.query._start || 0) * 1;
   // const endIndex = (req.query._end || startIndex + 9) * 1;
   // const totalCount = products.length;
