@@ -56,6 +56,7 @@ userSchema.methods.getJWTToken = function () {
   return jwt.sign(
     {
       id: this._id,
+      expiredAt: Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000,
     },
     process.env.JWT_SECRET,
     {

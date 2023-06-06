@@ -18,7 +18,7 @@ router
   .put(isAuthenticatedUser, authorizeRoles('admin'), updateCategory);
 router.route('/categories/:id').get(getSingleCategory);
 router
-  .route('/admin/category/remove/:id')
+  .route('/admin/categories/remove/:id')
   .delete(isAuthenticatedUser, authorizeRoles('admin'), deleteCategory);
 router.route('/categories').get(getAllCategories);
 

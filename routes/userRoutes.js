@@ -14,13 +14,16 @@ const {
   getSingleUser,
   updateUserRole,
   deleteUser,
+  checkAuth,
 } = require('../controllers/userController');
 const router = express.Router();
 
 router.route('/register').post(registerUser);
 
 router.route('/login').post(loginUser);
-
+router
+  .route('/auth/checkauth')
+  .get(isAuthenticatedUser, authorizeRoles('admin'), checkAuth);
 router.route('/password/forgot').post(forgotPassword);
 
 router.route('/password/reset/:token').put(resetPassword);
