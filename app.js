@@ -16,13 +16,9 @@ app.use(cors(corsConfig));
 app.options('*', cors(corsConfig));
 app.use(express.json());
 app.use(cookieParser());
-app.use(
-  bodyParser.urlencoded({
-    extended: false,
-  })
-);
-app.use(bodyParser.json());
-
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json());
 // Add a proxy to bypass CORS restrictions
 app.use(
   '/login',
@@ -35,7 +31,16 @@ app.use(
     },
   })
 );
-
+app.use(
+  '/auth/checkauth',
+  createProxyMiddleware({
+    target: 'http://localhost:4000/api/v1/auth/checkauth',
+    changeOrigin: true,
+    onProxyRes: function (proxyRes, req, res) {
+      proxyRes.headers('Access-Control-Allow-Credentials', 'true');
+    },
+  })
+);
 // Route Imports
 const product = require('./routes/productRoute');
 const user = require('./routes/userRoutes');

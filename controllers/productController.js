@@ -5,42 +5,9 @@ const ApiFeatures = require('../utils/apifeatures');
 const path = require('path');
 const Category = require('../models/categoryModel');
 const fs = require('fs');
-const { MongoClient, ObjectId } = require('mongodb');
-
 const multer = require('multer');
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '');
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB
-    files: 15,
-  },
-  fileFilter: function (req, file, cb) {
-    const fileTypes = /jpeg|jpg|png|gif/; // Set allowed file types
-    const extname = fileTypes.test(
-      path.extname(file.originalname).toLowerCase()
-    );
-    const mimetype = fileTypes.test(file.mimetype);
-    if (extname && mimetype) {
-      cb(null, true);
-    } else {
-      cb(
-        new Error(
-          'Invalid file type. Only JPEG, JPG, PNG, and GIF images are allowed.'
-        )
-      );
-    }
-  },
-});
+const { MongoClient, ObjectId } = require('mongodb');
+const upload = require('../config/multerConfig');
 
 //Create Product -- Admin
 exports.createProduct = catchAsyncErrors(async (req, res, next) => {
@@ -76,8 +43,10 @@ exports.createProduct = catchAsyncErrors(async (req, res, next) => {
     }, {});
 
     let productInfo = Object.assign({}, obj, { images: images });
+    categoriesJSON = JSON.parse(productInfo.category);
+    categoriesSet = new Set(categoriesJSON.ids);
     productInfo.category = Array.from(
-      new Set(JSON.parse(productInfo.category))
+      new Set(JSON.parse(productInfo.category).ids)
     );
 
     let product = await Product.create(productInfo);
@@ -155,7 +124,7 @@ exports.getProductDetails = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: product,
+    product: product,
   });
 });
 

@@ -150,6 +150,11 @@ exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
+exports.checkAuth = catchAsyncErrors(async (req, res, next) => {
+  res.status(200).json({
+    success: true,
+  });
+});
 
 //Update user password
 
