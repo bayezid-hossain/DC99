@@ -15,11 +15,9 @@ router
   .post(isAuthenticatedUser, authorizeRoles('admin'), newCategory);
 router
   .route('/admin/categories/:id')
-  .put(isAuthenticatedUser, authorizeRoles('admin'), updateCategory);
-router.route('/categories/:id').get(getSingleCategory);
-router
-  .route('/admin/categories/remove/:id')
+  .put(isAuthenticatedUser, authorizeRoles('admin'), updateCategory)
   .delete(isAuthenticatedUser, authorizeRoles('admin'), deleteCategory);
+router.route('/categories/:id').get(getSingleCategory);
 router.route('/categories').get(getAllCategories);
 
 module.exports = router;
