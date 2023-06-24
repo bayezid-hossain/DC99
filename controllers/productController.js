@@ -3,7 +3,6 @@ const ErrorHandler = require('../utils/errorhandler');
 const catchAsyncErrors = require('../middleware/catchAsyncErrors');
 const ApiFeatures = require('../utils/apifeatures');
 const path = require('path');
-const Category = require('../models/categoryModel');
 const fs = require('fs');
 const multer = require('multer');
 const { MongoClient, ObjectId } = require('mongodb');
@@ -80,10 +79,7 @@ exports.getAllProducts = catchAsyncErrors(async (req, res) => {
 
   const products = await apiFeature.query;
   console.log('products sent');
-  // const startIndex = (req.query._start || 0) * 1;
-  // const endIndex = (req.query._end || startIndex + 9) * 1;
-  // const totalCount = products.length;
-  // const slicedPosts = products.slice(startIndex, endIndex);
+
   res.setHeader('Access-Control-Expose-Headers', 'Content-Range');
   res.setHeader('Content-Range', `1-20/20`);
 
@@ -93,22 +89,63 @@ exports.getAllProducts = catchAsyncErrors(async (req, res) => {
 //Update product -- Admin
 
 exports.updateProduct = catchAsyncErrors(async (req, res, next) => {
-  let product = await Product.findById(req.params.id);
+  const uploadPromise = new Promise((resolve, reject) => {
+    upload.array('newImages')(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        // A multer error occurred
+        reject(
+          new Error(
+            'File upload failed: ' +
+              err.message +
+              ' ' +
+              (err.field ? err.field : '')
+          )
+        );
+      } else if (err) {
+        // An unknown error occurred
+        reject(err);
+      } else {
+        // No error occurred, resolve the Promise with the uploaded files
+        resolve(req.files);
+      }
+    });
+  });
+  try {
+    let product = await Product.findById(req.params.id);
+    const files = await uploadPromise;
+    const newImages = files.map((file) => file.filename);
+    req.body.user = req.user.id;
+    const bodyEntries = Object.entries(req.body);
+    const obj = bodyEntries.reduce((acc, [key, value]) => {
+      acc[key] = value;
+      return acc;
+    }, {});
+    let productInfo = Object.assign({}, obj, {
+      images: newImages,
+    });
+    productInfo.category = Array.from(
+      new Set(JSON.parse(productInfo.category).ids)
+    );
 
-  if (!product) {
-    return next(new ErrorHandler('Product Not Found', 404));
+    console.log(productInfo);
+    product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { ...productInfo, images: [...product.images, ...productInfo.images] },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      }
+    );
+    console.log(product);
+
+    res.status(201).json({
+      success: true,
+      product,
+    });
+  } catch (err) {
+    next(err);
   }
-
-  product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false,
-  });
-
-  res.status(200).json({
-    success: true,
-    product,
-  });
 });
 
 // Get Product Details

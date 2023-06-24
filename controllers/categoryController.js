@@ -104,11 +104,15 @@ exports.updateCategory = [
       );
     } else {
       // Update the category without modifying the image field
-      category = await Category.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
-      });
+      category = await Category.findByIdAndUpdate(
+        req.params.id,
+        { ...req.body, image: category.image },
+        {
+          new: true,
+          runValidators: true,
+          useFindAndModify: false,
+        }
+      );
     }
 
     res.status(200).json({
